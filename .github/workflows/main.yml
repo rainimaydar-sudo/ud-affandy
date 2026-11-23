@@ -1,0 +1,68 @@
+
+name: Build MASA DEPAN APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil kode aplikasi
+        uses: actions/checkout@v4
+
+      - name: Siapkan Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Siapkan proyek Android
+        run: |
+          mkdir -p www
+          cp index.html manifest.json sw.js www/
+          cat > package.json <<'EOF'
+          {
+            "name": "masa-depan",
+            "version": "1.0.0",
+            "private": true,
+            "dependencies": {
+              "@capacitor/core": "6.2.1",
+              "@capacitor/android": "6.2.1"
+            },
+            "devDependencies": {
+              "@capacitor/cli": "6.2.1"
+            }
+          }
+          EOF
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "id.masadepan.app",
+            "appName": "MASA DEPAN",
+            "webDir": "www"
+          }
+          EOF
+          npm install
+          npx cap add android
+          npx cap sync android
+
+      - name: Bangun APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Simpan APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MASA-DEPAN-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
