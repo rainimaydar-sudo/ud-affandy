@@ -2,9 +2,18 @@
   "name": "MASA DEPAN Kasir & Toko",
   "short_name": "MASA DEPAN",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f3f6fa",
   "theme_color": "#10243a",
-  "description": "Aplikasi kasir dan manajemen toko",
-  "icons": []
+  "description": "Aplikasi kasir dan manajemen toko MASA DEPAN",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%2310243a'/%3E%3Ccircle cx='256' cy='256' r='164' fill='%231769aa'/%3E%3Ctext x='256' y='292' text-anchor='middle' font-family='Arial,sans-serif' font-size='148' font-weight='800' fill='%23ffffff'%3EMD%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
