@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10243a"><meta name="description" content="Aplikasi kasir dan manajemen toko UD.AFFANDY">
+<link rel="manifest" href="manifest.json">
+<title>UD.AFFANDY — Kasir & Toko</title>
+<style>
+:root{--navy:#10243a;--blue:#1769aa;--bg:#f3f6fa;--ink:#172536;--muted:#6b7785;--line:#e3e9ef;--green:#168653;--red:#c33d48}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:linear-gradient(130deg,#10243a,#1769aa);color:#fff;padding:20px 18px 18px;border-radius:0 0 22px 22px}
+.top{display:flex;justify-content:space-between;align-items:center}.brand{font-weight:850;font-size:21px;letter-spacing:.4px}.sub{font-size:12px;opacity:.8;margin-top:3px}
+main{max-width:760px;margin:auto;padding:14px 14px 90px}.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:14px 0}.tab{border:0;border-radius:12px;padding:10px 3px;background:#e5edf5;color:#33485c;font-size:11px;font-weight:700}.tab.active{background:var(--navy);color:white}
+.panel{display:none}.panel.active{display:block}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:15px;margin:10px 0;box-shadow:0 3px 12px #10243a08}
+h2{font-size:18px;margin:4px 0 12px}h3{font-size:15px;margin:0 0 10px}.muted{color:var(--muted);font-size:12px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:white;border:1px solid var(--line);border-radius:15px;padding:14px}.stat b{display:block;font-size:20px;margin-top:5px}.btn{border:0;border-radius:11px;background:var(--blue);color:white;padding:11px 14px;font-weight:700;cursor:pointer}.btn.secondary{background:#e8eef5;color:#263b50}.btn.danger{background:#fff0f0;color:var(--red)}.btn.green{background:var(--green)}.btn.small{padding:7px 9px;font-size:12px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+input,select{width:100%;padding:12px;border:1px solid #d8e0e8;border-radius:10px;background:white;font:inherit;margin:5px 0 10px;min-width:0}
+label{font-size:12px;font-weight:700;color:#526273}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.formgrid .wide{grid-column:1/-1}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.item{padding:11px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}.price{font-weight:800}.pill{font-size:11px;border-radius:20px;padding:4px 8px;background:#edf3f8;color:#3c5368}.empty{text-align:center;color:var(--muted);padding:22px}
+#video{width:100%;border-radius:12px;background:#111;max-height:280px;object-fit:cover}.hidden{display:none!important}.total{font-size:24px;font-weight:850}.notice{background:#fff8df;border:1px solid #f1df9c;border-radius:12px;padding:10px;font-size:12px;color:#705a16}
+footer{text-align:center;color:#8a96a3;font-size:11px;padding:18px}
+@media(min-width:600px){.stats{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header><div class="top"><div><div class="brand">UD.AFFANDY</div><div class="sub">Aplikasi Kasir & Manajemen Toko</div></div><span class="pill">OFFLINE READY</span></div></header>
+<main>
+<div class="tabs">
+<button class="tab active" data-tab="home">Beranda</button><button class="tab" data-tab="kasir">Kasir</button><button class="tab" data-tab="produk">Produk</button><button class="tab" data-tab="laporan">Laporan</button><button class="tab" data-tab="lainnya">Lainnya</button>
+</div>
+<section id="home" class="panel active">
+<h2>Dashboard toko</h2>
+<div class="stats">
+<div class="stat"><span class="muted">Omzet hari ini</span><b id="todaySales">Rp0</b></div>
+<div class="stat"><span class="muted">Transaksi hari ini</span><b id="todayCount">0</b></div>
+<div class="stat"><span class="muted">Jumlah produk</span><b id="productCount">0</b></div>
+<div class="stat"><span class="muted">Stok menipis</span><b id="lowCount">0</b></div>
+</div>
+<div class="card"><h3>Akses cepat</h3><div class="actions"><button class="btn" onclick="go('kasir')">＋ Transaksi baru</button><button class="btn secondary" onclick="go('produk')">＋ Tambah produk</button></div></div>
+<div class="card"><h3>Transaksi terbaru</h3><div id="recent"></div></div>
+</section>
+<section id="kasir" class="panel">
+<h2>Kasir / Penjualan</h2>
+<div class="card">
+<label>Cari produk atau scan barcode</label><input id="cartSearch" placeholder="Nama produk / kode barcode" oninput="renderSearch()">
+<div id="searchResults"></div>
+<div class="actions"><button class="btn secondary" onclick="startScan()">▣ Scan barcode</button><button class="btn secondary" onclick="stopScan()">Tutup scanner</button></div>
+<video id="video" class="hidden" playsinline></video><div id="scanMsg" class="muted"></div>
+</div>
+<div class="card"><h3>Keranjang belanja</h3><div id="cartItems" class="empty">Belum ada produk di keranjang.</div><div class="row"><b>Total</b><span class="total" id="cartTotal">Rp0</span></div>
+<label>Metode pembayaran</label><select id="payMethod"><option>Tunai</option><option>Transfer bank</option><option>QRIS</option><option>Debit</option></select>
+<label>Uang diterima (untuk pembayaran tunai)</label><input id="paid" type="number" min="0" placeholder="Masukkan jumlah uang" oninput="changeDue()">
+<div class="row"><span class="muted">Kembalian</span><b id="due">Rp0</b></div>
+<div class="actions"><button class="btn green" onclick="checkout()">Selesaikan transaksi</button><button class="btn danger" onclick="clearCart()">Kosongkan</button></div></div>
+</section>
+<section id="produk" class="panel">
+<h2>Manajemen produk</h2>
+<div class="card"><h3>Tambah / edit produk</h3><input type="hidden" id="editId">
+<div class="formgrid">
+<div class="wide"><label>Nama produk *</label><input id="pName" placeholder="Contoh: Beras 5 kg"></div>
+<div><label>Barcode / SKU</label><input id="pCode" placeholder="Kode produk"></div><div><label>Kategori</label><input id="pCat" placeholder="Sembako, dll"></div>
+<div><label>Harga modal</label><input id="pCost" type="number" min="0" placeholder="0"></div><div><label>Harga jual *</label><input id="pPrice" type="number" min="0" placeholder="0"></div>
+<div><label>Stok awal</label><input id="pStock" type="number" min="0" placeholder="0"></div><div><label>Batas stok minimum</label><input id="pMin" type="number" min="0" value="5"></div>
+</div><div class="actions"><button class="btn" onclick="saveProduct()">Simpan produk</button><button class="btn secondary" onclick="resetProduct()">Bersihkan</button></div></div>
+<div class="card"><div class="row"><h3>Daftar produk</h3><span class="pill" id="prodTotal">0 produk</span></div><input id="prodFilter" placeholder="Cari nama / barcode..." oninput="renderProducts()"><div id="productList"></div></div>
+</section>
+<section id="laporan" class="panel">
+<h2>Laporan penjualan</h2><div class="stats">
+<div class="stat"><span class="muted">Total omzet</span><b id="allSales">Rp0</b></div><div class="stat"><span class="muted">Estimasi laba</span><b id="allProfit">Rp0</b></div>
+</div><div class="card"><h3>Riwayat transaksi</h3><div id="history"></div><div class="actions"><button class="btn secondary" onclick="exportCSV()">Ekspor CSV</button></div></div>
+</section>
+<section id="lainnya" class="panel">
+<h2>Pengaturan & data</h2>
+<div class="card"><h3>Backup data</h3><p class="muted">Simpan seluruh produk dan riwayat transaksi ke file JSON. Simpan file backup di tempat aman.</p><div class="actions"><button class="btn" onclick="backup()">Unduh backup</button><button class="btn secondary" onclick="document.getElementById('restoreFile').click()">Pulihkan backup</button><input id="restoreFile" type="file" accept="application/json" class="hidden" onchange="restore(event)"></div></div>
+<div class="card"><h3>Informasi aplikasi</h3><p><b>UD.AFFANDY</b><br><span class="muted">Aplikasi kasir dan pengelolaan toko.</span></p><p class="notice">Data disimpan pada penyimpanan browser di HP ini. Hapus data browser dapat menghapus data aplikasi. Lakukan backup secara berkala. Untuk penggunaan beberapa kasir/perangkat secara bersamaan diperlukan server dan database online.</p><div class="actions"><button class="btn secondary" onclick="installApp()">Pasang aplikasi</button></div><div id="installHint" class="muted"></div></div>
+</section>
+<footer>UD.AFFANDY • Kelola toko lebih mudah</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id), money=n=>'Rp'+Number(n||0).toLocaleString('id-ID');
+let products=JSON.parse(localStorage.getItem('ua_products')||'[]'), sales=JSON.parse(localStorage.getItem('ua_sales')||'[]'), cart=[];
+function save(){localStorage.setItem('ua_products',JSON.stringify(products));localStorage.setItem('ua_sales',JSON.stringify(sales));renderAll()}
+function go(tab){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===tab));if(tab==='kasir')renderSearch()}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+function renderAll(){renderDashboard();renderProducts();renderHistory();renderCart()}
+function renderDashboard(){let d=new Date().toLocaleDateString('en-CA');let todays=sales.filter(s=>new Date(s.time).toLocaleDateString('en-CA')===d);$('todaySales').textContent=money(todays.reduce((a,s)=>a+s.total,0));$('todayCount').textContent=todays.length;$('productCount').textContent=products.length;$('lowCount').textContent=products.filter(p=>p.stock<=p.min).length;$('recent').innerHTML=sales.slice(-5).reverse().map(s=>`<div class="item row"><div><b>${s.invoice}</b><div class="muted">${new Date(s.time).toLocaleString('id-ID')}</div></div><b>${money(s.total)}</b></div>`).join('')||'<div class="empty">Belum ada transaksi.</div>'}
+function renderProducts(){let q=($('prodFilter')?.value||'').toLowerCase();let arr=products.filter(p=>(p.name+' '+p.code+' '+p.cat).toLowerCase().includes(q));$('prodTotal').textContent=products.length+' produk';$('productList').innerHTML=arr.map(p=>`<div class="item"><div class="row"><div><b>${esc(p.name)}</b><div class="muted">${esc(p.code||'Tanpa barcode')} • ${esc(p.cat||'Umum')}</div><div class="muted">Modal ${money(p.cost)} · Jual ${money(p.price)}</div></div><div style="text-align:right"><b>${p.stock}</b><div class="muted">stok</div></div></div><div class="actions"><button class="btn small secondary" onclick="editProduct('${p.id}')">Edit</button><button class="btn small secondary" onclick="adjustStock('${p.id}')">Ubah stok</button><button class="btn small danger" onclick="deleteProduct('${p.id}')">Hapus</button></div></div>`).join('')||'<div class="empty">Produk belum ada.</div>'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function resetProduct(){['editId','pName','pCode','pCat','pCost','pPrice','pStock'].forEach(x=>$(x).value='');$('pMin').value=5}
+function saveProduct(){let name=$('pName').value.trim(),price=+$('pPrice').value;if(!name||price<=0){alert('Nama produk dan harga jual wajib diisi.');return}let id=$('editId').value, code=$('pCode').value.trim();if(code&&products.some(p=>p.code===code&&p.id!==id)){alert('Barcode/SKU sudah digunakan produk lain.');return}let old=products.find(p=>p.id===id);let p={id:id||String(Date.now()),name,code,cat:$('pCat').value.trim(),cost:+$('pCost').value||0,price,stock:Math.max(0,+$('pStock').value||0),min:Math.max(0,+$('pMin').value||0)};if(old)products=products.map(x=>x.id===id?p:p);else products.push(p);resetProduct();save();alert('Produk berhasil disimpan.')}
+function editProduct(id){let p=products.find(x=>x.id===id);if(!p)return;$('editId').value=p.id;$('pName').value=p.name;$('pCode').value=p.code;$('pCat').value=p.cat;$('pCost').value=p.cost;$('pPrice').value=p.price;$('pStock').value=p.stock;$('pMin').value=p.min;window.scrollTo({top:0,behavior:'smooth'})}
+function deleteProduct(id){if(confirm('Hapus produk ini?')){products=products.filter(p=>p.id!==id);save()}}
+function adjustStock(id){let p=products.find(x=>x.id===id),v=prompt('Masukkan stok baru untuk '+p.name,p.stock);if(v!==null&&v.trim()!==''&&Number(v)>=0){p.stock=Number(v);save()}}
+function renderSearch(){let q=$('cartSearch').value.toLowerCase();let arr=products.filter(p=>(p.name+' '+p.code).toLowerCase().includes(q)).slice(0,8);$('searchResults').innerHTML=arr.map(p=>`<div class="item row"><div><b>${esc(p.name)}</b><div class="muted">${esc(p.code||'')} · Stok ${p.stock}</div><b>${money(p.price)}</b></div><button class="btn small" onclick="addCart('${p.id}')">Tambah</button></div>`).join('')|| (q?'<div class="muted">Produk tidak ditemukan.</div>':'')}
+function addCart(id){let p=products.find(x=>x.id===id);if(!p)return;let c=cart.find(x=>x.id===id);if(c){if(c.qty>=p.stock){alert('Stok tidak mencukupi.');return}c.qty++}else{if(p.stock<1){alert('Stok kosong.');return}cart.push({id:p.id,name:p.name,price:p.price,cost:p.cost,qty:1})}renderCart()}
+function qtyCart(id,delta){let c=cart.find(x=>x.id===id),p=products.find(x=>x.id===id);if(!c)return;c.qty+=delta;if(c.qty<=0)cart=cart.filter(x=>x.id!==id);else if(c.qty>p.stock){c.qty=p.stock;alert('Melebihi stok tersedia.')}renderCart()}
+function total(){return cart.reduce((a,c)=>a+c.price*c.qty,0)}
+function renderCart(){$('cartItems').innerHTML=cart.map(c=>`<div class="item row"><div style="flex:1"><b>${esc(c.name)}</b><div class="muted">${money(c.price)} × ${c.qty}</div></div><div class="actions"><button class="btn small secondary" onclick="qtyCart('${c.id}',-1)">−</button><b>${c.qty}</b><button class="btn small secondary" onclick="qtyCart('${c.id}',1)">＋</button></div></div>`).join('')||'<div class="empty">Belum ada produk di keranjang.</div>';$('cartTotal').textContent=money(total());changeDue()}
+function changeDue(){let paid=+$('paid').value||0;$('due').textContent=money(Math.max(0,paid-total()))}
+function clearCart(){cart=[];$('paid').value='';renderCart()}
+function checkout(){if(!cart.length){alert('Keranjang masih kosong.');return}let t=total(),method=$('payMethod').value,paid=method==='Tunai'?(+$('paid').value||0):t;if(paid<t){alert('Uang diterima masih kurang.');return}for(let c of cart){let p=products.find(x=>x.id===c.id);if(!p||p.stock<c.qty){alert('Stok '+c.name+' tidak mencukupi.');return}}let sale={invoice:'UA-'+Date.now().toString().slice(-8),time:new Date().toISOString(),items:cart.map(c=>({...c})),total:t,paid,change:paid-t,method,profit:cart.reduce((a,c)=>a+(c.price-c.cost)*c.qty,0)};cart.forEach(c=>products.find(p=>p.id===c.id).stock-=c.qty);sales.push(sale);save();clearCart();alert('Transaksi berhasil!\\nNo: '+sale.invoice+'\\nTotal: '+money(t)+'\\nKembalian: '+money(sale.change));printReceipt(sale)}
+function printReceipt(s){let w=window.open('','_blank','width=360,height=600');if(!w){alert('Izinkan pop-up untuk mencetak struk.');return}w.document.write(`<html><head><title>Struk ${s.invoice}</title><style>body{font:13px monospace;padding:15px}h2{text-align:center}hr{border:0;border-top:1px dashed}</style></head><body><h2>UD.AFFANDY</h2><center>Struk pembayaran</center><hr>${s.invoice}<br>${new Date(s.time).toLocaleString('id-ID')}<hr>${s.items.map(i=>`${esc(i.name)}<br>${i.qty} x ${money(i.price)} = ${money(i.qty*i.price)}`).join('<br>')}<hr>Total: ${money(s.total)}<br>Bayar: ${money(s.paid)}<br>Kembali: ${money(s.change)}<br>Metode: ${s.method}<hr><center>Terima kasih</center><script>window.print()<\/script></body></html>`);w.document.close()}
+function renderHistory(){$('allSales').textContent=money(sales.reduce((a,s)=>a+s.total,0));$('allProfit').textContent=money(sales.reduce((a,s)=>a+s.profit,0));$('history').innerHTML=sales.slice().reverse().map(s=>`<div class="item"><div class="row"><b>${s.invoice}</b><b>${money(s.total)}</b></div><div class="muted">${new Date(s.time).toLocaleString('id-ID')} · ${s.method} · Laba ${money(s.profit)}</div><div class="actions"><button class="btn small secondary" onclick="reprint('${s.invoice}')">Cetak struk</button></div></div>`).join('')||'<div class="empty">Belum ada transaksi.</div>'}
+function reprint(id){let s=sales.find(x=>x.invoice===id);if(s)printReceipt(s)}
+function exportCSV(){let rows=[['Invoice','Tanggal','Metode','Omzet','Laba'],...sales.map(s=>[s.invoice,new Date(s.time).toLocaleString('id-ID'),s.method,s.total,s.profit])];let csv=rows.map(r=>r.map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\n');download('laporan-ud-affandy.csv','text/csv;charset=utf-8',csv)}
+function backup(){download('backup-ud-affandy-'+new Date().toISOString().slice(0,10)+'.json','application/json',JSON.stringify({products,sales},null,2))}
+function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!Array.isArray(d.products)||!Array.isArray(d.sales))throw 0;if(confirm('Pulihkan backup? Data saat ini akan diganti.')){products=d.products;sales=d.sales;save();alert('Backup berhasil dipulihkan.')}}catch(_){alert('File backup tidak valid.')}};r.readAsText(f);e.target.value=''}
+function download(name,type,data){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+let stream=null,scanLoop=null;
+async function startScan(){if(!('BarcodeDetector'in window)){ $('scanMsg').textContent='Browser ini belum mendukung pemindai barcode. Gunakan Chrome Android terbaru atau masukkan kode secara manual.';return}try{let detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','qr_code']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});$('video').srcObject=stream;$('video').classList.remove('hidden');await $('video').play();$('scanMsg').textContent='Arahkan kamera ke barcode produk.';scanLoop=setInterval(async()=>{try{let codes=await detector.detect($('video'));if(codes.length){$('cartSearch').value=codes[0].rawValue;renderSearch();let p=products.find(x=>x.code===codes[0].rawValue);if(p)addCart(p.id);else{$('scanMsg').textContent='Barcode belum terdaftar. Tambahkan produk dengan kode: '+codes[0].rawValue;go('produk');$('pCode').value=codes[0].rawValue}stopScan()}}catch(e){}},350)}catch(e){$('scanMsg').textContent='Kamera tidak dapat dibuka. Pastikan izin kamera diberikan dan aplikasi dibuka melalui HTTPS.'}}
+function stopScan(){if(scanLoop)clearInterval(scanLoop);scanLoop=null;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('video').classList.add('hidden')}
+let deferredPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
+async function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null}else $('installHint').textContent='Di Chrome Android: buka menu ⋮ lalu pilih “Tambahkan ke layar utama” atau “Install app”.'}
+if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+renderAll();
+</script>
+</body></html>
