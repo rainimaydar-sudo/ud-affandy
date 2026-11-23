@@ -6,7 +6,7 @@
 <link rel="manifest" href="manifest.json">
 <title>MASA DEPAN — Kasir & Toko</title>
 <style>
-:root{--navy:#10243a;--blue:#1769aa;--bg:#f3f6fa;--ink:#172536;--muted:#6b7785;--line:#e3e9ef;--green:#168653;--red:#c33d48}
+:root{--navy:#10243a;--blue:#1769aa;--bg:#f3f6fa;--ink:#172536;--muted:#6b7785;--line:#e3e9ef;--green:#168653;--red:#c33d48;--amber:#9a6700}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 header{background:linear-gradient(130deg,#10243a,#1769aa);color:#fff;padding:20px 18px 18px;border-radius:0 0 22px 22px}
 .top{display:flex;justify-content:space-between;align-items:center}.brand{font-weight:850;font-size:21px;letter-spacing:.4px}.sub{font-size:12px;opacity:.8;margin-top:3px}
@@ -15,7 +15,7 @@ main{max-width:760px;margin:auto;padding:14px 14px 90px}.tabs{display:grid;grid-
 h2{font-size:18px;margin:4px 0 12px}h3{font-size:15px;margin:0 0 10px}.muted{color:var(--muted);font-size:12px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:white;border:1px solid var(--line);border-radius:15px;padding:14px}.stat b{display:block;font-size:20px;margin-top:5px}.btn{border:0;border-radius:11px;background:var(--blue);color:white;padding:11px 14px;font-weight:700;cursor:pointer}.btn.secondary{background:#e8eef5;color:#263b50}.btn.danger{background:#fff0f0;color:var(--red)}.btn.green{background:var(--green)}.btn.small{padding:7px 9px;font-size:12px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 input,select{width:100%;padding:12px;border:1px solid #d8e0e8;border-radius:10px;background:white;font:inherit;margin:5px 0 10px;min-width:0}
 label{font-size:12px;font-weight:700;color:#526273}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.formgrid .wide{grid-column:1/-1}
-.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.item{padding:11px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}.price{font-weight:800}.pill{font-size:11px;border-radius:20px;padding:4px 8px;background:#edf3f8;color:#3c5368}.empty{text-align:center;color:var(--muted);padding:22px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.item{padding:11px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}.price{font-weight:800}.pill{font-size:11px;border-radius:20px;padding:4px 8px;background:#edf3f8;color:#3c5368}.pill.warn{background:#fff4d6;color:var(--amber);font-weight:700}.empty{text-align:center;color:var(--muted);padding:22px}
 #video{width:100%;border-radius:12px;background:#111;max-height:280px;object-fit:cover}.hidden{display:none!important}.total{font-size:24px;font-weight:850}.notice{background:#fff8df;border:1px solid #f1df9c;border-radius:12px;padding:10px;font-size:12px;color:#705a16}
 footer{text-align:center;color:#8a96a3;font-size:11px;padding:18px}
 @media(min-width:600px){.stats{grid-template-columns:repeat(4,1fr)}}
@@ -49,7 +49,14 @@ footer{text-align:center;color:#8a96a3;font-size:11px;padding:18px}
 <div class="card"><h3>Keranjang belanja</h3><div id="cartItems" class="empty">Belum ada produk di keranjang.</div><div class="row"><b>Total</b><span class="total" id="cartTotal">Rp0</span></div>
 <label>Metode pembayaran</label><select id="payMethod"><option>Tunai</option><option>Transfer bank</option><option>QRIS</option><option>Debit</option></select>
 <label>Uang diterima (untuk pembayaran tunai)</label><input id="paid" type="number" min="0" placeholder="Masukkan jumlah uang" oninput="changeDue()">
-<div class="row"><span class="muted">Kembalian</span><b id="due">Rp0</b></div>
+<div class="actions">
+<button class="btn small secondary" type="button" onclick="setExactCash()">Uang pas</button>
+<button class="btn small secondary" type="button" onclick="addCash(10000)">+Rp10.000</button>
+<button class="btn small secondary" type="button" onclick="addCash(20000)">+Rp20.000</button>
+<button class="btn small secondary" type="button" onclick="addCash(50000)">+Rp50.000</button>
+<button class="btn small secondary" type="button" onclick="addCash(100000)">+Rp100.000</button>
+</div>
+<div class="row" style="margin-top:10px"><span class="muted">Kembalian</span><b id="due">Rp0</b></div>
 <div class="actions"><button class="btn green" onclick="checkout()">Selesaikan transaksi</button><button class="btn danger" onclick="clearCart()">Kosongkan</button></div></div>
 </section>
 <section id="produk" class="panel">
@@ -83,7 +90,7 @@ function go(tab){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 function renderAll(){renderDashboard();renderProducts();renderHistory();renderCart()}
 function renderDashboard(){let d=new Date().toLocaleDateString('en-CA');let todays=sales.filter(s=>new Date(s.time).toLocaleDateString('en-CA')===d);$('todaySales').textContent=money(todays.reduce((a,s)=>a+s.total,0));$('todayCount').textContent=todays.length;$('productCount').textContent=products.length;$('lowCount').textContent=products.filter(p=>p.stock<=p.min).length;$('recent').innerHTML=sales.slice(-5).reverse().map(s=>`<div class="item row"><div><b>${s.invoice}</b><div class="muted">${new Date(s.time).toLocaleString('id-ID')}</div></div><b>${money(s.total)}</b></div>`).join('')||'<div class="empty">Belum ada transaksi.</div>'}
-function renderProducts(){let q=($('prodFilter')?.value||'').toLowerCase();let arr=products.filter(p=>(p.name+' '+p.code+' '+p.cat).toLowerCase().includes(q));$('prodTotal').textContent=products.length+' produk';$('productList').innerHTML=arr.map(p=>`<div class="item"><div class="row"><div><b>${esc(p.name)}</b><div class="muted">${esc(p.code||'Tanpa barcode')} • ${esc(p.cat||'Umum')}</div><div class="muted">Modal ${money(p.cost)} · Jual ${money(p.price)}</div></div><div style="text-align:right"><b>${p.stock}</b><div class="muted">stok</div></div></div><div class="actions"><button class="btn small secondary" onclick="editProduct('${p.id}')">Edit</button><button class="btn small secondary" onclick="adjustStock('${p.id}')">Ubah stok</button><button class="btn small danger" onclick="deleteProduct('${p.id}')">Hapus</button></div></div>`).join('')||'<div class="empty">Produk belum ada.</div>'}
+function renderProducts(){let q=($('prodFilter')?.value||'').toLowerCase();let arr=products.filter(p=>(p.name+' '+p.code+' '+p.cat).toLowerCase().includes(q));$('prodTotal').textContent=products.length+' produk';$('productList').innerHTML=arr.map(p=>{let low=p.stock<=p.min;return `<div class="item"><div class="row"><div><b>${esc(p.name)}</b> ${low?'<span class="pill warn">Stok menipis</span>':''}<div class="muted">${esc(p.code||'Tanpa barcode')} • ${esc(p.cat||'Umum')}</div><div class="muted">Modal ${money(p.cost)} · Jual ${money(p.price)}</div></div><div style="text-align:right"><b>${p.stock}</b><div class="muted">stok (min ${p.min})</div></div></div><div class="actions"><button class="btn small secondary" onclick="editProduct('${p.id}')">Edit</button><button class="btn small secondary" onclick="adjustStock('${p.id}')">Ubah stok</button><button class="btn small danger" onclick="deleteProduct('${p.id}')">Hapus</button></div></div>`}).join('')||'<div class="empty">Produk belum ada.</div>'}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function resetProduct(){['editId','pName','pCode','pCat','pCost','pPrice','pStock'].forEach(x=>$(x).value='');$('pMin').value=5}
 function saveProduct(){let name=$('pName').value.trim(),price=+$('pPrice').value;if(!name||price<=0){alert('Nama produk dan harga jual wajib diisi.');return}let id=$('editId').value, code=$('pCode').value.trim();if(code&&products.some(p=>p.code===code&&p.id!==id)){alert('Barcode/SKU sudah digunakan produk lain.');return}let old=products.find(p=>p.id===id);let p={id:id||String(Date.now()),name,code,cat:$('pCat').value.trim(),cost:+$('pCost').value||0,price,stock:Math.max(0,+$('pStock').value||0),min:Math.max(0,+$('pMin').value||0)};if(old)products=products.map(x=>x.id===id?p:p);else products.push(p);resetProduct();save();alert('Produk berhasil disimpan.')}
@@ -95,6 +102,8 @@ function addCart(id){let p=products.find(x=>x.id===id);if(!p)return;let c=cart.f
 function qtyCart(id,delta){let c=cart.find(x=>x.id===id),p=products.find(x=>x.id===id);if(!c)return;c.qty+=delta;if(c.qty<=0)cart=cart.filter(x=>x.id!==id);else if(c.qty>p.stock){c.qty=p.stock;alert('Melebihi stok tersedia.')}renderCart()}
 function total(){return cart.reduce((a,c)=>a+c.price*c.qty,0)}
 function renderCart(){$('cartItems').innerHTML=cart.map(c=>`<div class="item row"><div style="flex:1"><b>${esc(c.name)}</b><div class="muted">${money(c.price)} × ${c.qty}</div></div><div class="actions"><button class="btn small secondary" onclick="qtyCart('${c.id}',-1)">−</button><b>${c.qty}</b><button class="btn small secondary" onclick="qtyCart('${c.id}',1)">＋</button></div></div>`).join('')||'<div class="empty">Belum ada produk di keranjang.</div>';$('cartTotal').textContent=money(total());changeDue()}
+function setExactCash(){$('payMethod').value='Tunai';$('paid').value=total();changeDue()}
+function addCash(n){$('payMethod').value='Tunai';let cur=+$('paid').value||0;$('paid').value=cur+n;changeDue()}
 function changeDue(){let paid=+$('paid').value||0;$('due').textContent=money(Math.max(0,paid-total()))}
 function clearCart(){cart=[];$('paid').value='';renderCart()}
 function checkout(){if(!cart.length){alert('Keranjang masih kosong.');return}let t=total(),method=$('payMethod').value,paid=method==='Tunai'?(+$('paid').value||0):t;if(paid<t){alert('Uang diterima masih kurang.');return}for(let c of cart){let p=products.find(x=>x.id===c.id);if(!p||p.stock<c.qty){alert('Stok '+c.name+' tidak mencukupi.');return}}let sale={invoice:'MD-'+Date.now().toString().slice(-8),time:new Date().toISOString(),items:cart.map(c=>({...c})),total:t,paid,change:paid-t,method,profit:cart.reduce((a,c)=>a+(c.price-c.cost)*c.qty,0)};cart.forEach(c=>products.find(p=>p.id===c.id).stock-=c.qty);sales.push(sale);save();clearCart();alert('Transaksi berhasil!\nNo: '+sale.invoice+'\nTotal: '+money(t)+'\nKembalian: '+money(sale.change));printReceipt(sale)}
@@ -110,7 +119,4 @@ async function startScan(){if(!('BarcodeDetector'in window)){ $('scanMsg').textC
 function stopScan(){if(scanLoop)clearInterval(scanLoop);scanLoop=null;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('video').classList.add('hidden')}
 let deferredPrompt=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
 async function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null}else $('installHint').textContent='Di Chrome Android: buka menu ⋮ lalu pilih “Tambahkan ke layar utama” atau “Install app”.'}
-if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
-renderAll();
-</script>
-</body></html>
+if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch((
